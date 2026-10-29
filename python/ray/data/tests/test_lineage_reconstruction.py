@@ -9,7 +9,7 @@ the bundler.
 
 import pickle
 from dataclasses import replace
-from typing import Dict
+from typing import Dict, cast
 from unittest.mock import MagicMock
 
 import pytest
@@ -299,7 +299,8 @@ def test_recovery_status_counts_queued_running_and_finished():
     """``lineage_recovery_progress_str`` counts only tasks serving a plan as running."""
     from types import SimpleNamespace
 
-    op = SimpleNamespace(
+    # Only the attributes the method reads; cast so it type-checks as ``self``.
+    state = SimpleNamespace(
         _lineage_tracker=LineageTracker(),
         _num_reconstruction_inputs_queued=2,
         _data_tasks={
@@ -309,11 +310,12 @@ def test_recovery_status_counts_queued_running_and_finished():
         },
         _num_reconstruction_tasks_finished=3,
     )
+    op = cast(MapOperator, state)
     assert MapOperator.lineage_recovery_progress_str(op) == (
         "Recovery: 2 queued, 2 running, 3 finished"
     )
 
-    op._lineage_tracker = None
+    state._lineage_tracker = None
     assert MapOperator.lineage_recovery_progress_str(op) == ""
 
 
